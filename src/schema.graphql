@@ -1,0 +1,178 @@
+# import * from './generated/prisma.graphql'
+# front-facing public api
+
+type Mutation {
+	createNewPost(
+		title: String!
+		description: String!
+		entityID: ID!
+		tags: [ID]!
+		post_type: PostType!
+		poll_title: String
+		poll_options: [String]
+	): Post!
+	createNewTag(title: String!, entityID: ID): Tag!
+	createEntity(title: String!, description: String!, image_url: String!, type: EntityType!): Entity!
+	createUser(username: String, email: String!, cognito_id: String!): User!
+	# change this to return Vote
+	vote(id: ID!, type: VoteTypeEnum!): Post!
+	voteOnPoll(id: ID!, selected_id: ID!): PollVote
+	createComment(postID: ID!, content: ID!): Comment
+	createSubcomment(commentID: ID!, content: ID!): Comment
+	# world cup voting
+	worldCupVote(selected_ids: [ID!]!, email: String!): Boolean!
+}
+
+type Query {
+	users: [User]!
+	worldCupItemCategories: [WorldCupItemCategory!]!
+	popularEntities(entity_type: EntityType!): [Entity]!
+	usernameExists(username: String!): Boolean!
+	tags(where: TagWhereInput, first: Int): [Tag]!
+	entities(where: EntityWhereInput, orderBy: EntityOrderByInput): [Entity]!
+	entitySearch(keyword: String!): [Entity]!
+	#
+	entity(where: EntityWhereUniqueInput): Entity
+	user(where: UserWhereUniqueInput): User
+	post(where: PostWhereUniqueInput!): Post!
+	posts(where: PostWhereInput, orderBy: PostOrderByInput, first: Int): [Post]!
+	comments(where: CommentWhereInput, orderBy: CommentOrderByInput, skip: Int, first: Int, last: Int): [Comment]!
+	newPostQuery(id: ID!): Post!
+	#
+	feedPosts(orderBy: PostOrderByInput, first: Int, skip: Int): [Post]!
+	entityPosts(id: ID!, first: Int!, skip: Int!): [Post]!
+	vote(id: ID!, type: VoteTypeEnum!): Vote
+	#
+	currentUser: User
+}
+
+type WorldCupItem {
+	id: ID!
+	title: String!
+	image_url: String!
+	vote_count: Int! 
+}
+
+type WorldCupItemCategory {
+	id: ID!
+	items: [WorldCupItem!]!
+	vote_limit: Int!
+	category_name: ItemCategory!
+}
+
+enum ItemCategory {
+	ASSAULT_RIFLES
+	SHOTGUNS
+	SNIPER_RIFLES
+	PISTOLS
+	MACHINE_GUNS
+	EXPLOSIVES
+	THROWABLES
+}
+
+type User {
+	id: ID!
+	bio: String
+	name: String
+	email: String
+	reputation: Int
+	username: String
+	# cognitoID: String!
+	image_url: String
+	posts: [Post]!
+}
+
+type Entity {
+	id: ID!
+	title: String!
+	description: String!
+	image_url: String!
+	verified: Boolean!
+	posts: [Post]!
+	tags: [Tag]!
+	type: EntityType
+}
+
+enum EntityType {
+	COMPANY
+	INFLUENCER
+	YOUTUBER
+}
+
+type Post {
+	id: ID!
+	title: String!
+	tags: [Tag]
+	# make this required
+	description: String
+	createdAt: DateTime!
+	entity: Entity!
+	author: User!
+	comments: [Comment]!
+	upvote_count: Int!
+	downvote_count: Int!
+	votes: [Vote]!
+	poll: Poll
+	post_type: PostType!
+	current_user_upvoted: Boolean!
+	current_user_downvoted: Boolean!
+}
+
+enum PostType {
+	UPVOTE_OR_DOWNVOTE
+	POLL_SELECTION
+}
+
+type Comment {
+	id: ID!
+	createdAt: String!
+	subcomments: [Comment]!
+	content: String!
+	author: User!
+	post: Post
+	votes: [Vote]!
+	upvote_count: Int
+	downvote_count: Int
+}
+
+type Poll {
+	id: ID!
+	title: String!
+	votes: [PollVote]!
+	total_votes: Int!
+	options: [PollOption]!
+	multiselection: Boolean!
+}
+
+type PollOption {
+	id: ID!
+	poll: Poll!
+	title: String!
+	vote_count: Int!
+	current_user_voted: Boolean!
+}
+
+type PollVote {
+	id: ID!
+	user: User
+	poll: Poll
+	selected: PollOption!
+}
+
+type Vote {
+	id: ID!
+	user: User
+	post: Post
+	type: VoteTypeEnum
+}
+
+enum VoteTypeEnum {
+	UPVOTE
+	DOWNVOTE
+}
+
+type Tag {
+	id: ID!
+	title: String!
+	entity: Entity!
+}

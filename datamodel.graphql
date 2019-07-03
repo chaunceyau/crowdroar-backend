@@ -1,0 +1,153 @@
+# POSTED TO PRISMA
+type User {
+	id: ID! @unique
+	bio: String
+	name: String
+	email: String @unique
+	username: String @unique
+	image_url: String 
+	reputation: Int @default(value: "0")
+	cognito_id: String! @unique 
+	comments: [Comment]!
+	posts: [Post]! @relation(name: "PostByUser")
+	votes: [Vote]!
+	last_post: DateTime
+	poll_votes: [PollVote]! 
+	anonymous: Boolean @default(value: "false")
+	# lastPost: DateTime
+}
+
+type WorldCupItem {
+	id: ID! @unique
+	title: String!
+	image_url: String!
+	vote_count: Int! @default(value: 0)	
+}
+
+type WorldCupItemCategory {
+	id: ID! @unique
+	items: [WorldCupItem!]!
+	category_name: ItemCategory!
+	vote_limit: Int! @default(value: 1)
+}
+
+type WorldCupVote {
+	id: ID! @unique
+	email: String! @unique
+}
+
+enum ItemCategory {
+	ASSAULT_RIFLES
+	SHOTGUNS
+	SNIPER_RIFLES
+	PISTOLS
+	MACHINE_GUNS
+	EXPLOSIVES
+	THROWABLES
+}
+
+type Entity {
+	id: ID! @unique
+	title: String!
+	description: String!
+	image_url: String!
+	verified: Boolean!
+	posts: [Post]!
+	tags: [Tag]!
+	type: EntityType
+}
+
+enum EntityType {
+	COMPANY
+	INFLUENCER
+	YOUTUBER
+}
+
+type Post {
+	id: ID! @unique
+	title: String!
+	description: String
+	entity: Entity!
+	author: User! @relation(name: "PostByUser")
+	tags: [Tag]!
+	comments: [Comment]!
+	createdAt: DateTime!
+	updatedAt: DateTime!
+	poll: Poll
+	# voting
+	votes: [Vote]!
+	upvote_count: Int @default(value: "0") 
+	downvote_count: Int @default(value: "0") 
+	post_type: PostType!
+}
+
+enum PostType {
+	UPVOTE_OR_DOWNVOTE
+	POLL_SELECTION
+}
+
+type Comment {
+	id: ID! @unique
+	createdAt: DateTime!
+	updatedAt: DateTime!
+	post: Post
+	author: User!
+	content: String!
+	subcomments: [Comment]!
+	votes: [Vote]!
+	upvote_count: Int @default(value: "0")
+	downvote_count: Int @default(value: "0")
+}
+
+type Poll {
+	id: ID! @unique
+	title: String!
+	total_votes: Int @default(value: "0")  
+	post: Post!
+	votes: [PollVote]!
+	options: [PollOption]!
+	multiselection: Boolean! @default(value: "false")
+}
+
+type PollOption {
+	id: ID! @unique
+	poll: Poll!
+	title: String!
+	vote_count: Int!
+}
+
+type PollVote {
+	id: ID! @unique
+	user: User
+	poll: Poll!
+	selected: PollOption!
+}
+
+type Vote {
+	id: ID! @unique
+	user: User
+	post: Post
+	type: VoteTypeEnum
+	createdAt: DateTime!
+}
+
+enum VoteTypeEnum {
+	UPVOTE
+	DOWNVOTE
+	POLL_VOTE
+}
+
+type Tag {
+	id: ID! @unique
+	title: String!
+	entity: Entity
+	posts: [Post]!
+}
+
+# lowercase version of Entity, used for searching
+type EntitySearchIndex {
+	id: ID! @unique
+	title: String!
+	description: String!
+	entity: Entity!
+}
